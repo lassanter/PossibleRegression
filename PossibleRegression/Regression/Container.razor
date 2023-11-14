@@ -1,0 +1,34 @@
+﻿@using Radzen
+@using Radzen.Blazor
+
+<h3>Container</h3>
+
+<RadzenDropDown @bind-Value="@_value" TValue="int" Data="@_players" LoadData="@LoadData" Count="@_count" AllowVirtualization="true" AllowClear="true"
+                AllowFiltering="true" TextProperty="Name" ValueProperty="Id" Style="width: 100%; max-width: 400px;"
+                Name="PlayerNameDropdown"/>
+@code
+{
+    private int _value;
+
+    private List<ServiceResult> _players;
+
+    private int _count;
+
+    private ServiceClass Service { get; set; } = new ServiceClass();
+
+    private async Task LoadData(LoadDataArgs args)
+    {
+        IQueryable<ServiceResult> query = new List<ServiceResult>().AsQueryable();
+
+        if (!string.IsNullOrEmpty(args.Filter))
+        {
+            query = (await Service.FindByPartial(args.Filter)).AsQueryable();
+        }
+
+        _count = query.Count();
+
+        _players = query.Skip(args.Skip.HasValue ? args.Skip.Value : 0).Take(args.Top.HasValue ? args.Top.Value : 10).ToList();
+
+        await InvokeAsync(StateHasChanged);
+    }
+}
